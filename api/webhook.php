@@ -63,7 +63,8 @@ $keyboard = [
                     "request_id" => 2,
                     "user_is_bot" => true,
                     "request_name" => true,
-                    "request_username" => true
+                    "request_username" => true,
+                    "request_photo" => true
                 ]
             ]
         ]
