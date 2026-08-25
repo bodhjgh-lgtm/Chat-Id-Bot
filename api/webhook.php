@@ -100,8 +100,7 @@ $keyboard = [
             ]
         ]
     ],
-    "resize_keyboard" => true,
-    "is_persistent" => true
+    "resize_keyboard" => true
 ];
 
 if (isset($update["message"])) {
