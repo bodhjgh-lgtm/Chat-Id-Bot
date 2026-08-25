@@ -40,6 +40,15 @@ function getUserProfilePic($userId) {
     return null;
 }
 
+// Helper function to get Channel/Group profile picture
+function getChatProfilePic($chatId) {
+    $res = sendTelegramRequest('getChat', ['chat_id' => $chatId]);
+    if (isset($res['result']['photo']['big_file_id'])) {
+        return $res['result']['photo']['big_file_id'];
+    }
+    return null;
+}
+
 // Fixed Reply Menu Keyboard with Unicode Fonts, Emojis, and User Request feature
 $keyboard = [
     "keyboard" => [
@@ -63,6 +72,28 @@ $keyboard = [
                     "request_id" => 2,
                     "user_is_bot" => true,
                     "request_name" => true,
+                    "request_username" => true,
+                    "request_photo" => true
+                ]
+            ]
+        ],
+        [
+            [
+                "text" => "📢 𝐒ᴇʟᴇᴄᴛ 𝐂ʜᴀɴɴᴇʟ",
+                "request_chat" => [
+                    "request_id" => 3,
+                    "chat_is_channel" => true,
+                    "request_title" => true,
+                    "request_username" => true,
+                    "request_photo" => true
+                ]
+            ],
+            [
+                "text" => "👥 𝐒ᴇʟ𝐞ᴄ𝐭 𝐆ʀᴏᴜᴘ",
+                "request_chat" => [
+                    "request_id" => 4,
+                    "chat_is_channel" => false,
+                    "request_title" => true,
                     "request_username" => true,
                     "request_photo" => true
                 ]
@@ -117,6 +148,48 @@ if (isset($update["message"])) {
         exit;
     }
 
+    // Handle Channel/Group shared via button
+    if (isset($update["message"]["chat_shared"])) {
+        $shared = $update["message"]["chat_shared"];
+        $sChatId = $shared["chat_id"];
+        $sTitle = isset($shared["title"]) ? $shared["title"] : "No Title";
+        $sUsername = isset($shared["username"]) ? "@" . $shared["username"] : "No Link/Username";
+        $reqId = $shared["request_id"];
+
+        $cType = ($reqId == 3) ? "𝐂ʜᴀɴɴᴇʟ" : "𝐆ʀᴏᴜᴘ";
+
+        $caption = "📢 <b>𝐒ᴇʟᴇᴄᴛᴇᴅ " . $cType . " 𝐈ɴғᴏ:</b>\n\n";
+        $caption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($sTitle) . "\n";
+        $caption .= "🔗 <b>𝐋ɪɴᴋ:</b> " . htmlspecialchars($sUsername) . "\n";
+        $caption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $sChatId . "</code>";
+
+        // Try getting photo directly from payload first, then fallback
+        $photoId = null;
+        if (isset($shared["photo"]) && is_array($shared["photo"]) && count($shared["photo"]) > 0) {
+            $photoId = end($shared["photo"])["file_id"];
+        } else {
+            $photoId = getChatProfilePic($sChatId);
+        }
+
+        if ($photoId) {
+            sendTelegramRequest('sendPhoto', [
+                'chat_id' => $chatId,
+                'photo' => $photoId,
+                'caption' => $caption,
+                'parse_mode' => 'HTML',
+                'reply_markup' => $keyboard
+            ]);
+        } else {
+            sendTelegramRequest('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $caption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ (ᴏʀ 𝐁ᴏᴛ ɪs ɴᴏᴛ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ).</i>",
+                'parse_mode' => 'HTML',
+                'reply_markup' => $keyboard
+            ]);
+        }
+        exit;
+    }
+
     // 2. Fallback for older API (user_shared)
     if (isset($update["message"]["user_shared"])) {
         $sUserId = $update["message"]["user_shared"]["user_id"];
@@ -145,8 +218,55 @@ if (isset($update["message"])) {
     }
 
     // 3. Check if the message is a Forwarded message
-    if (isset($update["message"]["forward_origin"]) || isset($update["message"]["forward_from"]) || isset($update["message"]["forward_sender_name"])) {
+    if (isset($update["message"]["forward_origin"]) || isset($update["message"]["forward_from"]) || isset($update["message"]["forward_sender_name"]) || isset($update["message"]["forward_from_chat"])) {
         
+        $fChat = null;
+        if (isset($update["message"]["forward_from_chat"])) {
+            $fChat = $update["message"]["forward_from_chat"];
+        } elseif (isset($update["message"]["forward_origin"])) {
+            if ($update["message"]["forward_origin"]["type"] == "channel" && isset($update["message"]["forward_origin"]["chat"])) {
+                $fChat = $update["message"]["forward_origin"]["chat"];
+            } elseif ($update["message"]["forward_origin"]["type"] == "chat" && isset($update["message"]["forward_origin"]["sender_chat"])) {
+                $fChat = $update["message"]["forward_origin"]["sender_chat"];
+            }
+        }
+
+        if ($fChat) {
+            // Handle Channel/Group
+            $fTitle = $fChat["title"] ?? "No Title";
+            $fUsername = isset($fChat["username"]) ? "@" . $fChat["username"] : "No Link/Username";
+            $fChatId = $fChat["id"];
+            
+            // Format type correctly (Channel, Supergroup, Group)
+            $cType = $fChat["type"] ?? "Chat";
+            if ($cType == "supergroup") $cType = "Group";
+            $cType = ucfirst($cType);
+
+            $caption = "📢 <b>𝐅ᴏʀᴡᴀʀᴅᴇᴅ " . $cType . " 𝐈ɴғᴏ:</b>\n\n";
+            $caption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($fTitle) . "\n";
+            $caption .= "🔗 <b>𝐋ɪɴᴋ:</b> " . htmlspecialchars($fUsername) . "\n";
+            $caption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $fChatId . "</code>";
+
+            $photoId = getChatProfilePic($fChatId);
+            if ($photoId) {
+                sendTelegramRequest('sendPhoto', [
+                    'chat_id' => $chatId,
+                    'photo' => $photoId,
+                    'caption' => $caption,
+                    'parse_mode' => 'HTML',
+                    'reply_markup' => $keyboard
+                ]);
+            } else {
+                sendTelegramRequest('sendMessage', [
+                    'chat_id' => $chatId,
+                    'text' => $caption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ (ᴏʀ 𝐁ᴏᴛ ɪs ɴᴏᴛ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ).</i>",
+                    'parse_mode' => 'HTML',
+                    'reply_markup' => $keyboard
+                ]);
+            }
+            exit;
+        }
+
         // Handle Privacy Restricted Users
         if (isset($update["message"]["forward_sender_name"]) || (isset($update["message"]["forward_origin"]) && $update["message"]["forward_origin"]["type"] == "hidden_user")) {
             $hiddenName = isset($update["message"]["forward_sender_name"]) ? $update["message"]["forward_sender_name"] : $update["message"]["forward_origin"]["sender_user_name"];
