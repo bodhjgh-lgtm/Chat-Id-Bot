@@ -53,11 +53,15 @@ function getChatProfilePic($chatId) {
 $keyboard = [
     "keyboard" => [
         [
-            ["text" => "👤 𝐌𝐲 𝐈𝐧𝐟𝐨"]
+            [
+                "text" => "👤 𝐌𝐲 𝐈𝐧𝐟𝐨",
+                "style" => "primary"
+            ]
         ],
         [
             [
                 "text" => "🔍 𝐒𝐞𝐥𝐞𝐜𝐭 𝐔𝐬𝐞𝐫 (𝐆𝐞𝐭 𝐈𝐃)",
+                "style" => "primary",
                 "request_users" => [
                     "request_id" => 1,
                     "user_is_bot" => false,
@@ -68,6 +72,7 @@ $keyboard = [
             ],
             [
                 "text" => "🤖 𝐒𝐞𝐥𝐞𝐜𝐭 𝐁𝐨𝐭 (𝐆𝐞𝐭 𝐈𝐃)",
+                "style" => "success",
                 "request_users" => [
                     "request_id" => 2,
                     "user_is_bot" => true,
@@ -80,6 +85,7 @@ $keyboard = [
         [
             [
                 "text" => "📢 𝐒ᴇʟᴇᴄᴛ 𝐂ʜᴀɴɴᴇʟ",
+                "style" => "primary",
                 "request_chat" => [
                     "request_id" => 3,
                     "chat_is_channel" => true,
@@ -90,6 +96,7 @@ $keyboard = [
             ],
             [
                 "text" => "👥 𝐒ᴇʟ𝐞ᴄ𝐭 𝐆ʀᴏᴜᴘ",
+                "style" => "danger",
                 "request_chat" => [
                     "request_id" => 4,
                     "chat_is_channel" => false,
