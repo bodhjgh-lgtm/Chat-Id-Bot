@@ -1,0 +1,6 @@
+{
+  "name": "Telegram Chat ID Bot (PHP)",
+  "description": "A PHP-based Telegram bot hosted on Vercel to extract User IDs, Names, and Profile Pictures.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
