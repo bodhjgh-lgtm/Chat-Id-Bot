@@ -40,12 +40,33 @@ function getUserProfilePic($userId) {
     return null;
 }
 
-// Fixed Reply Menu Keyboard
+// Fixed Reply Menu Keyboard with Unicode Fonts, Emojis, and User Request feature
 $keyboard = [
     "keyboard" => [
         [
-            ["text" => "👤 My Info"],
-            ["text" => "⏩ Forward Message (Get ID)"]
+            ["text" => "👤 𝐌𝐲 𝐈𝐧𝐟𝐨"],
+            ["text" => "⏩ 𝐅𝐨𝐫𝐰𝐚𝐫𝐝 𝐌𝐞𝐬𝐬𝐚𝐠𝐞"]
+        ],
+        [
+            [
+                "text" => "🔍 𝐒𝐞𝐥𝐞𝐜𝐭 𝐔𝐬𝐞𝐫 (𝐆𝐞𝐭 𝐈𝐃)",
+                "request_users" => [
+                    "request_id" => 1,
+                    "user_is_bot" => false,
+                    "request_name" => true,
+                    "request_username" => true,
+                    "request_photo" => true
+                ]
+            ],
+            [
+                "text" => "🤖 𝐒𝐞𝐥𝐞𝐜𝐭 𝐁𝐨𝐭 (𝐆𝐞𝐭 𝐈𝐃)",
+                "request_users" => [
+                    "request_id" => 2,
+                    "user_is_bot" => true,
+                    "request_name" => true,
+                    "request_username" => true
+                ]
+            ]
         ]
     ],
     "resize_keyboard" => true,
@@ -56,15 +77,75 @@ if (isset($update["message"])) {
     $chatId = $update["message"]["chat"]["id"];
     $text = isset($update["message"]["text"]) ? $update["message"]["text"] : "";
 
-    // 1. Check if the message is a Forwarded message
+    // 1. Check if user was selected via "Select User" button (Bot API 7.0+)
+    if (isset($update["message"]["users_shared"])) {
+        $shared = $update["message"]["users_shared"]["users"][0];
+        $sUserId = $shared["user_id"];
+        $sName = trim(($shared["first_name"] ?? "") . " " . ($shared["last_name"] ?? ""));
+        if (empty($sName)) $sName = "No Name";
+        $sUsername = isset($shared["username"]) ? "@" . $shared["username"] : "No Username";
+
+        $caption = "🎯 <b>Selected Target Info:</b>\n\n";
+        $caption .= "📛 <b>Name:</b> " . htmlspecialchars($sName) . "\n";
+        $caption .= "👤 <b>Username:</b> " . htmlspecialchars($sUsername) . "\n";
+        $caption .= "🆔 <b>Chat ID:</b> <code>" . $sUserId . "</code>";
+
+        $photoId = getUserProfilePic($sUserId);
+        if ($photoId) {
+            sendTelegramRequest('sendPhoto', [
+                'chat_id' => $chatId,
+                'photo' => $photoId,
+                'caption' => $caption,
+                'parse_mode' => 'HTML',
+                'reply_markup' => $keyboard
+            ]);
+        } else {
+            sendTelegramRequest('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $caption . "\n\n<i>📷 No Profile Picture found (Privacy restricted or no photo).</i>",
+                'parse_mode' => 'HTML',
+                'reply_markup' => $keyboard
+            ]);
+        }
+        exit;
+    }
+
+    // 2. Fallback for older API (user_shared)
+    if (isset($update["message"]["user_shared"])) {
+        $sUserId = $update["message"]["user_shared"]["user_id"];
+        $caption = "🎯 <b>Selected Target Info:</b>\n\n";
+        $caption .= "🆔 <b>Chat ID:</b> <code>" . $sUserId . "</code>\n\n";
+        $caption .= "<i>Note: Update your Telegram app to see Name & Username directly.</i>";
+
+        $photoId = getUserProfilePic($sUserId);
+        if ($photoId) {
+            sendTelegramRequest('sendPhoto', [
+                'chat_id' => $chatId,
+                'photo' => $photoId,
+                'caption' => $caption,
+                'parse_mode' => 'HTML',
+                'reply_markup' => $keyboard
+            ]);
+        } else {
+            sendTelegramRequest('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $caption,
+                'parse_mode' => 'HTML',
+                'reply_markup' => $keyboard
+            ]);
+        }
+        exit;
+    }
+
+    // 3. Check if the message is a Forwarded message
     if (isset($update["message"]["forward_origin"]) || isset($update["message"]["forward_from"]) || isset($update["message"]["forward_sender_name"])) {
         
-        // Handle Privacy Restricted Users (They hide their link on forwards)
+        // Handle Privacy Restricted Users
         if (isset($update["message"]["forward_sender_name"]) || (isset($update["message"]["forward_origin"]) && $update["message"]["forward_origin"]["type"] == "hidden_user")) {
             $hiddenName = isset($update["message"]["forward_sender_name"]) ? $update["message"]["forward_sender_name"] : $update["message"]["forward_origin"]["sender_user_name"];
             sendTelegramRequest('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => "⚠️ <b>Privacy Restricted</b>\n\nThe user <b>" . htmlspecialchars($hiddenName) . "</b> has hidden their account in forwarded messages. I cannot extract their Chat ID or Profile Picture.",
+                'text' => "⚠️ <b>Privacy Restricted</b>\n\nThe user <b>" . htmlspecialchars($hiddenName) . "</b> has hidden their account in forwarded messages. I cannot extract their Chat ID.",
                 'parse_mode' => 'HTML',
                 'reply_markup' => $keyboard
             ]);
@@ -105,8 +186,8 @@ if (isset($update["message"])) {
         exit;
     }
 
-    // 2. Handle standard text buttons & commands
-    if ($text == "/start" || $text == "👤 My Info") {
+    // 4. Handle standard text buttons & commands
+    if ($text == "/start" || $text == "👤 𝐌𝐲 𝐈𝐧𝐟𝐨") {
         $userId = $update["message"]["from"]["id"];
         $name = trim(($update["message"]["from"]["first_name"] ?? "") . " " . ($update["message"]["from"]["last_name"] ?? ""));
         $username = isset($update["message"]["from"]["username"]) ? "@" . $update["message"]["from"]["username"] : "No Username";
@@ -133,10 +214,10 @@ if (isset($update["message"])) {
                 'reply_markup' => $keyboard
             ]);
         }
-    } elseif ($text == "⏩ Forward Message (Get ID)") {
+    } elseif ($text == "⏩ 𝐅𝐨𝐫𝐰𝐚𝐫𝐝 𝐌𝐞𝐬𝐬𝐚𝐠𝐞") {
         sendTelegramRequest('sendMessage', [
             'chat_id' => $chatId,
-            'text' => "📌 <b>How to check someone's ID:</b>\n\nJust <b>forward any text, photo, or message</b> from that person to me.\n\nI will instantly grab their Chat ID and Profile Picture!",
+            'text' => "📌 <b>Forward Mode:</b>\n\nJust <b>forward any text, photo, or message</b> from someone to me, and I will instantly grab their Chat ID and Profile Picture!",
             'parse_mode' => 'HTML',
             'reply_markup' => $keyboard
         ]);
@@ -144,7 +225,7 @@ if (isset($update["message"])) {
         // Unknown text (not a command, not a forward)
         sendTelegramRequest('sendMessage', [
             'chat_id' => $chatId,
-            'text' => "Please use the buttons below, or forward a message to me to check the user's ID.",
+            'text' => "Please use the buttons below to interact, or click 'Select User' to find an ID.",
             'parse_mode' => 'HTML',
             'reply_markup' => $keyboard
         ]);
