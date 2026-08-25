@@ -85,10 +85,10 @@ if (isset($update["message"])) {
         if (empty($sName)) $sName = "No Name";
         $sUsername = isset($shared["username"]) ? "@" . $shared["username"] : "No Username";
 
-        $caption = "🎯 <b>Selected Target Info:</b>\n\n";
-        $caption .= "📛 <b>Name:</b> " . htmlspecialchars($sName) . "\n";
-        $caption .= "👤 <b>Username:</b> " . htmlspecialchars($sUsername) . "\n";
-        $caption .= "🆔 <b>Chat ID:</b> <code>" . $sUserId . "</code>";
+        $caption = "🎯 <b>𝐒ᴇʟᴇᴄᴛᴇᴅ 𝐓ᴀʀɢᴇᴛ 𝐈ɴғᴏ:</b>\n\n";
+        $caption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($sName) . "\n";
+        $caption .= "👤 <b>𝐔sᴇʀɴᴀᴍᴇ:</b> " . htmlspecialchars($sUsername) . "\n";
+        $caption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $sUserId . "</code>";
 
         // Try getting photo directly from payload first, then fallback
         $photoId = null;
@@ -109,7 +109,7 @@ if (isset($update["message"])) {
         } else {
             sendTelegramRequest('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => $caption . "\n\n<i>📷 No Profile Picture found (Privacy restricted or no photo).</i>",
+                'text' => $caption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ (𝐏ʀɪᴠᴀᴄʏ ʀᴇsᴛʀɪᴄᴛᴇᴅ ᴏʀ ɴᴏ ᴘʜᴏᴛᴏ).</i>",
                 'parse_mode' => 'HTML',
                 'reply_markup' => $keyboard
             ]);
@@ -120,9 +120,9 @@ if (isset($update["message"])) {
     // 2. Fallback for older API (user_shared)
     if (isset($update["message"]["user_shared"])) {
         $sUserId = $update["message"]["user_shared"]["user_id"];
-        $caption = "🎯 <b>Selected Target Info:</b>\n\n";
-        $caption .= "🆔 <b>Chat ID:</b> <code>" . $sUserId . "</code>\n\n";
-        $caption .= "<i>Note: Update your Telegram app to see Name & Username directly.</i>";
+        $caption = "🎯 <b>𝐒ᴇʟᴇᴄᴛᴇᴅ 𝐓ᴀʀɢᴇᴛ 𝐈ɴғᴏ:</b>\n\n";
+        $caption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $sUserId . "</code>\n\n";
+        $caption .= "<i>📌 𝐍ᴏᴛᴇ: 𝐔ᴘᴅᴀᴛᴇ ʏᴏᴜʀ 𝐓ᴇʟᴇɢʀᴀᴍ ᴀᴘᴘ ᴛᴏ sᴇᴇ 𝐍ᴀᴍᴇ & 𝐔sᴇʀɴᴀᴍᴇ ᴅɪʀᴇᴄᴛʟʏ.</i>";
 
         $photoId = getUserProfilePic($sUserId);
         if ($photoId) {
@@ -152,7 +152,7 @@ if (isset($update["message"])) {
             $hiddenName = isset($update["message"]["forward_sender_name"]) ? $update["message"]["forward_sender_name"] : $update["message"]["forward_origin"]["sender_user_name"];
             sendTelegramRequest('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => "⚠️ <b>Privacy Restricted</b>\n\nThe user <b>" . htmlspecialchars($hiddenName) . "</b> has hidden their account in forwarded messages. I cannot extract their Chat ID.",
+                'text' => "⚠️ <b>𝐏ʀɪᴠᴀᴄʏ 𝐑ᴇsᴛʀɪᴄᴛᴇᴅ</b>\n\n𝐓ʜᴇ ᴜsᴇʀ <b>" . htmlspecialchars($hiddenName) . "</b> ʜᴀs ʜɪᴅᴅᴇɴ ᴛʜᴇɪʀ ᴀᴄᴄᴏᴜɴᴛ ɪɴ ғᴏʀᴡᴀʀᴅᴇᴅ ᴍᴇssᴀɢᴇs. 𝐈 ᴄᴀɴɴᴏᴛ ᴇxᴛʀᴀᴄᴛ ᴛʜᴇɪʀ 𝐂ʜᴀᴛ 𝐈𝐃.",
                 'parse_mode' => 'HTML',
                 'reply_markup' => $keyboard
             ]);
@@ -167,10 +167,10 @@ if (isset($update["message"])) {
             $fName = trim(($fUser["first_name"] ?? "") . " " . ($fUser["last_name"] ?? ""));
             $fUsername = isset($fUser["username"]) ? "@" . $fUser["username"] : "No Username";
 
-            $caption = "🎯 <b>Forwarded User Info:</b>\n\n";
-            $caption .= "📛 <b>Name:</b> " . htmlspecialchars($fName) . "\n";
-            $caption .= "👤 <b>Username:</b> " . htmlspecialchars($fUsername) . "\n";
-            $caption .= "🆔 <b>Chat ID:</b> <code>" . $fUserId . "</code>";
+            $caption = "🎯 <b>𝐅ᴏʀᴡᴀʀᴅᴇᴅ 𝐔sᴇʀ 𝐈ɴғᴏ:</b>\n\n";
+            $caption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($fName) . "\n";
+            $caption .= "👤 <b>𝐔sᴇʀɴᴀᴍᴇ:</b> " . htmlspecialchars($fUsername) . "\n";
+            $caption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $fUserId . "</code>";
 
             $photoId = getUserProfilePic($fUserId);
             if ($photoId) {
@@ -184,7 +184,7 @@ if (isset($update["message"])) {
             } else {
                 sendTelegramRequest('sendMessage', [
                     'chat_id' => $chatId,
-                    'text' => $caption . "\n\n<i>📷 No Profile Picture found.</i>",
+                    'text' => $caption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ.</i>",
                     'parse_mode' => 'HTML',
                     'reply_markup' => $keyboard
                 ]);
@@ -199,10 +199,10 @@ if (isset($update["message"])) {
         $name = trim(($update["message"]["from"]["first_name"] ?? "") . " " . ($update["message"]["from"]["last_name"] ?? ""));
         $username = isset($update["message"]["from"]["username"]) ? "@" . $update["message"]["from"]["username"] : "No Username";
 
-        $caption = "👋 <b>Hello! Here is your Info:</b>\n\n";
-        $caption .= "📛 <b>Name:</b> " . htmlspecialchars($name) . "\n";
-        $caption .= "👤 <b>Username:</b> " . htmlspecialchars($username) . "\n";
-        $caption .= "🆔 <b>Chat ID:</b> <code>" . $userId . "</code>";
+        $caption = "👋 <b>𝐇ᴇʟʟᴏ! 𝐇ᴇʀᴇ ɪs ʏᴏᴜʀ 𝐈ɴғᴏ:</b>\n\n";
+        $caption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($name) . "\n";
+        $caption .= "👤 <b>𝐔sᴇʀɴᴀᴍᴇ:</b> " . htmlspecialchars($username) . "\n";
+        $caption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $userId . "</code>";
 
         $photoId = getUserProfilePic($userId);
         if ($photoId) {
@@ -216,23 +216,16 @@ if (isset($update["message"])) {
         } else {
             sendTelegramRequest('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => $caption . "\n\n<i>📷 No Profile Picture found.</i>",
+                'text' => $caption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ.</i>",
                 'parse_mode' => 'HTML',
                 'reply_markup' => $keyboard
             ]);
         }
-    } elseif ($text == "⏩ 𝐅𝐨𝐫𝐰𝐚𝐫𝐝 𝐌𝐞𝐬𝐬𝐚𝐠𝐞") {
-        sendTelegramRequest('sendMessage', [
-            'chat_id' => $chatId,
-            'text' => "📌 <b>Forward Mode:</b>\n\nJust <b>forward any text, photo, or message</b> from someone to me, and I will instantly grab their Chat ID and Profile Picture!",
-            'parse_mode' => 'HTML',
-            'reply_markup' => $keyboard
-        ]);
     } else {
         // Unknown text (not a command, not a forward)
         sendTelegramRequest('sendMessage', [
             'chat_id' => $chatId,
-            'text' => "Please use the buttons below to interact, or click 'Select User' to find an ID.",
+            'text' => "⚠️ <b>𝐏ʟᴇᴀsᴇ ᴜsᴇ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ɪɴᴛᴇʀᴀᴄᴛ, ᴏʀ ᴄʟɪᴄᴋ '𝐒ᴇʟᴇᴄᴛ 𝐔sᴇʀ' ᴛᴏ ғɪɴᴅ ᴀɴ 𝐈𝐃.</b>",
             'parse_mode' => 'HTML',
             'reply_markup' => $keyboard
         ]);
