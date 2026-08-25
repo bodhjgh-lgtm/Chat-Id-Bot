@@ -44,8 +44,7 @@ function getUserProfilePic($userId) {
 $keyboard = [
     "keyboard" => [
         [
-            ["text" => "👤 𝐌𝐲 𝐈𝐧𝐟𝐨"],
-            ["text" => "⏩ 𝐅𝐨𝐫𝐰𝐚𝐫𝐝 𝐌𝐞𝐬𝐬𝐚𝐠𝐞"]
+            ["text" => "👤 𝐌𝐲 𝐈𝐧𝐟𝐨"]
         ],
         [
             [
@@ -90,7 +89,14 @@ if (isset($update["message"])) {
         $caption .= "👤 <b>Username:</b> " . htmlspecialchars($sUsername) . "\n";
         $caption .= "🆔 <b>Chat ID:</b> <code>" . $sUserId . "</code>";
 
-        $photoId = getUserProfilePic($sUserId);
+        // Try getting photo directly from payload first, then fallback
+        $photoId = null;
+        if (isset($shared["photo"]) && is_array($shared["photo"]) && count($shared["photo"]) > 0) {
+            $photoId = end($shared["photo"])["file_id"];
+        } else {
+            $photoId = getUserProfilePic($sUserId);
+        }
+
         if ($photoId) {
             sendTelegramRequest('sendPhoto', [
                 'chat_id' => $chatId,
