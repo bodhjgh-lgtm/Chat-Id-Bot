@@ -351,24 +351,40 @@ if (isset($update["message"])) {
 
         // Notify Admin on /start
         if ($text == "/start" && $adminId != "YOUR_ADMIN_CHAT_ID" && $userId != $adminId) {
-            $adminCaption = "🚨 <b>𝐍ᴇᴡ 𝐔sᴇʀ 𝐉ᴏɪɴᴇᴅ!</b>\n\n";
-            $adminCaption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($name) . "\n";
-            $adminCaption .= "👤 <b>𝐔sᴇʀɴᴀᴍᴇ:</b> " . htmlspecialchars($username) . "\n";
-            $adminCaption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $userId . "</code>";
+            
+            // Temporary storage to track if the user has already joined (prevents spam)
+            $tmpFile = sys_get_temp_dir() . '/joined_users.json';
+            $joinedUsers = [];
+            if (file_exists($tmpFile)) {
+                $joinedUsers = json_decode(file_get_contents($tmpFile), true) ?: [];
+            }
+            
+            // Check if user is NEW (not in the list)
+            if (!in_array($userId, $joinedUsers)) {
+                
+                // Add user to the list and save it
+                $joinedUsers[] = $userId;
+                file_put_contents($tmpFile, json_encode($joinedUsers));
 
-            if ($photoId) {
-                sendTelegramRequest('sendPhoto', [
-                    'chat_id' => $adminId,
-                    'photo' => $photoId,
-                    'caption' => $adminCaption,
-                    'parse_mode' => 'HTML'
-                ]);
-            } else {
-                sendTelegramRequest('sendMessage', [
-                    'chat_id' => $adminId,
-                    'text' => $adminCaption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ.</i>",
-                    'parse_mode' => 'HTML'
-                ]);
+                $adminCaption = "🚨 <b>𝐍ᴇᴡ 𝐔sᴇʀ 𝐉ᴏɪɴᴇᴅ!</b>\n\n";
+                $adminCaption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($name) . "\n";
+                $adminCaption .= "👤 <b>𝐔sᴇʀɴᴀᴍᴇ:</b> " . htmlspecialchars($username) . "\n";
+                $adminCaption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $userId . "</code>";
+
+                if ($photoId) {
+                    sendTelegramRequest('sendPhoto', [
+                        'chat_id' => $adminId,
+                        'photo' => $photoId,
+                        'caption' => $adminCaption,
+                        'parse_mode' => 'HTML'
+                    ]);
+                } else {
+                    sendTelegramRequest('sendMessage', [
+                        'chat_id' => $adminId,
+                        'text' => $adminCaption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ.</i>",
+                        'parse_mode' => 'HTML'
+                    ]);
+                }
             }
         }
     } else {
