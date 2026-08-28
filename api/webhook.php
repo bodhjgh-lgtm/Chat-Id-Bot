@@ -5,6 +5,7 @@
  */
 
 $botToken = "7948122316:AAHSTsu0-rVnCVuaCuli1kUoAlkcgdz2NdI";
+$adminId = "6743390968"; // <-- Change this to your Telegram Chat ID
 $website = "https://api.telegram.org/bot" . $botToken;
 
 // Read incoming JSON from Telegram Webhook
@@ -346,6 +347,29 @@ if (isset($update["message"])) {
                 'parse_mode' => 'HTML',
                 'reply_markup' => $keyboard
             ]);
+        }
+
+        // Notify Admin on /start
+        if ($text == "/start" && $adminId != "YOUR_ADMIN_CHAT_ID" && $userId != $adminId) {
+            $adminCaption = "🚨 <b>𝐍ᴇᴡ 𝐔sᴇʀ 𝐉ᴏɪɴᴇᴅ!</b>\n\n";
+            $adminCaption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($name) . "\n";
+            $adminCaption .= "👤 <b>𝐔sᴇʀɴᴀᴍᴇ:</b> " . htmlspecialchars($username) . "\n";
+            $adminCaption .= "🆔 <b>𝐂ʜᴀᴛ 𝐈𝐃:</b> <code>" . $userId . "</code>";
+
+            if ($photoId) {
+                sendTelegramRequest('sendPhoto', [
+                    'chat_id' => $adminId,
+                    'photo' => $photoId,
+                    'caption' => $adminCaption,
+                    'parse_mode' => 'HTML'
+                ]);
+            } else {
+                sendTelegramRequest('sendMessage', [
+                    'chat_id' => $adminId,
+                    'text' => $adminCaption . "\n\n<i>📷 𝐍ᴏ 𝐏ʀᴏғɪʟᴇ 𝐏ɪᴄᴛᴜʀᴇ ғᴏᴜɴᴅ.</i>",
+                    'parse_mode' => 'HTML'
+                ]);
+            }
         }
     } else {
         // Unknown text (not a command, not a forward)
