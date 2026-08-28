@@ -353,10 +353,17 @@ if (isset($update["message"])) {
         if ($text == "/start" && $adminId != "YOUR_ADMIN_CHAT_ID" && $userId != $adminId) {
             
             // Temporary storage to track if the user has already joined (prevents spam)
-            $tmpFile = sys_get_temp_dir() . '/joined_users.json';
+            $dataFile = __DIR__ . '/user_data.json';
+            
+            // Vercel serverless functions have a read-only filesystem. 
+            // If the folder is not writable, fallback to the /tmp directory.
+            if (!is_writable(__DIR__)) {
+                $dataFile = sys_get_temp_dir() . '/user_data.json';
+            }
+
             $joinedUsers = [];
-            if (file_exists($tmpFile)) {
-                $joinedUsers = json_decode(file_get_contents($tmpFile), true) ?: [];
+            if (file_exists($dataFile)) {
+                $joinedUsers = json_decode(file_get_contents($dataFile), true) ?: [];
             }
             
             // Check if user is NEW (not in the list)
@@ -364,7 +371,7 @@ if (isset($update["message"])) {
                 
                 // Add user to the list and save it
                 $joinedUsers[] = $userId;
-                file_put_contents($tmpFile, json_encode($joinedUsers));
+                file_put_contents($dataFile, json_encode($joinedUsers, JSON_PRETTY_PRINT));
 
                 $adminCaption = "🚨 <b>𝐍ᴇᴡ 𝐔sᴇʀ 𝐉ᴏɪɴᴇᴅ!</b>\n\n";
                 $adminCaption .= "📛 <b>𝐍ᴀᴍᴇ:</b> " . htmlspecialchars($name) . "\n";
