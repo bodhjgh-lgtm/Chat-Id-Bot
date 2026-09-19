@@ -4,12 +4,12 @@
  */
 
 import React, { useState } from 'react';
-import { Bot, Code2, Copy, CheckCircle2, Rocket, ExternalLink, Link2 } from 'lucide-react';
+import { Bot, Code2, Copy, CheckCircle2, Rocket, ExternalLink, Link2, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const [vercelUrl, setVercelUrl] = useState('');
   const [webhookStatus, setWebhookStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
-  const botToken = "7948122316:AAHSTsu0-rVnCVuaCuli1kUoAlkcgdz2NdI";
+  const botToken = "7948122316:AAGahR7sxVvLjAnaJcNY1gW5K-tQvSwHuuw";
 
   const handleSetWebhook = async () => {
     if (!vercelUrl) {

@@ -4,7 +4,7 @@
  * Hosted on Vercel
  */
 
-$botToken = "7948122316:AAHSTsu0-rVnCVuaCuli1kUoAlkcgdz2NdI";
+$botToken = "7948122316:AAGahR7sxVvLjAnaJcNY1gW5K-tQvSwHuuw";
 $adminId = "6743390968"; // <-- Change this to your Telegram Chat ID
 $website = "https://api.telegram.org/bot" . $botToken;
 
